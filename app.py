@@ -30,7 +30,7 @@ cv = CountVectorizer(
     stop_words='english'
 )
 
-vectors = cv.fit_transform(movies['tags']).toarray()
+vectors = cv.fit_transform(movies['tags'])
 
 # Similarity matrix
 similarity = cosine_similarity(vectors)
