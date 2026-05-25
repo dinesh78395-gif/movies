@@ -11,16 +11,18 @@ app = Flask(__name__)
 # Load dataset
 movies = pd.read_csv('tmdb_5000_movies.csv')
 
+# Select important columns
 movies = movies[['title', 'overview', 'genres', 'keywords']]
 
+# Remove missing values
 movies = movies.dropna()
 
+# Create tags column
 movies['tags'] = (
     movies['overview'] +
     movies['genres'] +
     movies['keywords']
 )
-
 
 # Convert text into vectors
 cv = CountVectorizer(
@@ -30,7 +32,6 @@ cv = CountVectorizer(
 
 vectors = cv.fit_transform(movies['tags']).toarray()
 
-
 # Similarity matrix
 similarity = cosine_similarity(vectors)
 
@@ -38,7 +39,14 @@ similarity = cosine_similarity(vectors)
 # Recommendation function
 def recommend(movie):
 
-    movie_index = movies[movies['title'] == movie].index[0]
+    movie = movie.lower()
+
+    movies['title_lower'] = movies['title'].str.lower()
+
+    if movie not in movies['title_lower'].values:
+        return ["Please enter the full name of the movie correctly"]
+
+    movie_index = movies[movies['title_lower'] == movie].index[0]
 
     distances = similarity[movie_index]
 
@@ -68,11 +76,7 @@ def home():
 
         movie = request.form['movie']
 
-        try:
-            recommendations = recommend(movie)
-
-        except:
-            recommendations = ["Movie not found"]
+        recommendations = recommend(movie)
 
     return render_template(
         'index.html',
@@ -81,4 +85,4 @@ def home():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000)
